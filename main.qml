@@ -258,7 +258,7 @@ Window {
                 }
 
                 highlight: Rectangle {
-                    width: parent.width
+                    Layout.fillWidth: true
                     height: 30
                     color: 'lightsteelblue'
                 }
@@ -287,7 +287,7 @@ Window {
                             }
                         }
                         Text {
-                            text: model.desc + ' (' + model.difficulty + ') :' + model.port
+                            text: model.desc + ' [' + model.difficulty + '] :' + model.port
                         }
                     }
                 }
@@ -300,14 +300,14 @@ Window {
                     Text {
                         font.bold: true
                         font.pixelSize: 20
-                        text: poolPortModel.get(poolPortList.currentIndex).desc
+                        text: (poolPortModel.get(poolPortList.currentIndex) || {}).desc || ''
                     }
 
                     Text {
-                        text: 'Difficulty: ' + poolPortModel.get(poolPortList.currentIndex).difficulty
+                        text: 'Difficulty: ' + ((poolPortModel.get(poolPortList.currentIndex) || {}).difficulty || '')
                     }
                     Text {
-                        text: 'Port: ' + poolPortModel.get(poolPortList.currentIndex).port
+                        text: 'Port: ' + ((poolPortModel.get(poolPortList.currentIndex) || {}).port || '')
                     }
                     ComboBox {
                         model: getThreadSelectionModel(applicationData.numThreads())
