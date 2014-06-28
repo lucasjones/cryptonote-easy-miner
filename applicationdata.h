@@ -9,6 +9,8 @@ class ApplicationData : public QObject
     Q_OBJECT
 public:
 
+    ApplicationData() { }
+
     Q_INVOKABLE int numThreads() const;
     Q_INVOKABLE void startCpuMiner(int numThreads, QString protocol, QString url, int port, QString address);
     Q_INVOKABLE void stopCpuMiner();
