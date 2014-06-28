@@ -41,12 +41,13 @@ Window {
         var xhr = new XMLHttpRequest;
         xhr.open('GET', url);
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE)
+            if (xhr.readyState === XMLHttpRequest.DONE) {
                 if(xhr.status !== 200) {
                     callback(qsTr('Response code: ') + xhr.status)
                 } else {
                     callback(null, xhr.responseText);
                 }
+            }
         }
         xhr.send();
     }
@@ -78,12 +79,8 @@ Window {
         });
     }
 
-    function updateApiInfo() {
-        var url = apiUrl + '/stats';
-        console.log('Getting stats from ' + url + ' ...');
-        httpGet(url, function(err, res) {
-            var data;
-            if(err || !((data = JSON.parse(res)) && data.config && data.config.ports)) {
+    function resetPoolData() {
+                addressInfoPanel.Layout.preferredHeight = 0;
                 poolPortListWidthAnimation.enabled = true;
                 poolPortList.width = 0;
                 poolPortListWidthAnimation.enabled = false;
@@ -91,6 +88,15 @@ Window {
                 apiUrl = '';
                 mineUrl = '';
                 poolPortModel.clear();
+    }
+
+    function updateApiInfo() {
+        var url = apiUrl + '/stats';
+        console.log('Getting stats from ' + url + ' ...');
+        httpGet(url, function(err, res) {
+            var data;
+            if(err || !((data = JSON.parse(res)) && data.config && data.config.ports)) {
+                resetPoolData();
                 return console.error(err);
             }
             poolPortModel.clear();
@@ -146,14 +152,7 @@ Window {
         console.log('Retreiving api url from ' + pUrl + ' ...');
         getApiUrl(pUrl, function(err, url) {
             if(err) {
-                addressInfoPanel.Layout.preferredHeight = 0;
-                poolPortListWidthAnimation.enabled = true;
-                poolPortList.width = 0;
-                poolPortListWidthAnimation.enabled = false;
-                poolName.text = '';
-                apiUrl = '';
-                mineUrl = '';
-                poolPortModel.clear();
+                resetPoolData();
                 return console.error(err);
             }
             console.log('Got api url: ' + url);
@@ -345,9 +344,6 @@ Window {
                             id: minerOutputFlick
                             anchors.fill: parent
                             flickableDirection: Flickable.VerticalFlick
-                            function scrollToBottom() {
-                                contentY = contentHeight;
-                            }
 
                             Behavior on contentY {
                                 NumberAnimation {
@@ -365,7 +361,6 @@ Window {
                                     target: applicationData
                                     onMinerOutput: minerOutput.text += output
                                 }
-                                onTextChanged: minerOutputFlick.scrollToBottom()
                             }
                         }
                     }
