@@ -5,6 +5,14 @@ import QtQuick.Controls 1.1
 
 Window {
     property string apiUrl: ''
+    property string mineUrl: ''
+    property bool minerRunning: false
+
+    Connections {
+        target: applicationData
+        onMinerStarted: minerRunning = true
+        onMinerStopped: minerRunning = false
+    }
 
     function getThreadSelectionModel(num) {
         if(num < 1) {
@@ -81,6 +89,7 @@ Window {
                 poolPortListWidthAnimation.enabled = false;
                 poolName.text = '';
                 apiUrl = '';
+                mineUrl = '';
                 poolPortModel.clear();
                 return console.error(err);
             }
@@ -92,6 +101,7 @@ Window {
             poolPortList.width = 240;
             poolPortListWidthAnimation.enabled = false;
             poolName.text = cleanUrl(poolUrl.text);
+            mineUrl = data.config.poolHost;
             console.log('Got stats!');
         });
     }
@@ -142,6 +152,7 @@ Window {
                 poolPortListWidthAnimation.enabled = false;
                 poolName.text = '';
                 apiUrl = '';
+                mineUrl = '';
                 poolPortModel.clear();
                 return console.error(err);
             }
@@ -227,7 +238,7 @@ Window {
                     font.pixelSize: 10
                 }
                 Text {
-                    text: 'Hashrate: <b>' + addressInfoPanel.stats.hashrate + '/s</b> (est.)'
+                    text: 'Hashrate: <b>' + (addressInfoPanel.stats.hashrate || '0 H') + '/s</b> (est.)'
                 }
                 Text {
                     text: 'Paid: <b>' + addressInfoPanel.stats.paid + '</b>'
@@ -295,7 +306,7 @@ Window {
             Rectangle {
                 Layout.fillHeight: true
                 ColumnLayout {
-                    anchors.left: parent.left
+                    anchors.fill: parent
                     anchors.leftMargin: 10
                     Text {
                         font.bold: true
@@ -310,12 +321,53 @@ Window {
                         text: 'Port: ' + ((poolPortModel.get(poolPortList.currentIndex) || {}).port || '')
                     }
                     ComboBox {
+                        id: numMinerThreads
                         model: getThreadSelectionModel(applicationData.numThreads())
                         Layout.preferredWidth: 85
                     }
                     Button {
-                        text: 'Start mining'
+                        enabled: poolPortModel.count > 0
+                        text: minerRunning ? 'Stop Mining' : 'Start Mining'
                         Layout.preferredWidth: 85
+                        onClicked: minerRunning ?
+                                       applicationData.stopCpuMiner() :
+                                       applicationData.startCpuMiner(numMinerThreads.currentIndex + 1,
+                                                                     poolPortModel.get(poolPortList.currentIndex).protocol,
+                                                                     mineUrl,
+                                                                     poolPortModel.get(poolPortList.currentIndex).port,
+                                                                     minerAddress.text)
+                    }
+                    Rectangle {
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        border.color: 'lightgrey'
+                        Flickable {
+                            id: minerOutputFlick
+                            anchors.fill: parent
+                            flickableDirection: Flickable.VerticalFlick
+                            function scrollToBottom() {
+                                contentY = contentHeight;
+                            }
+
+                            Behavior on contentY {
+                                NumberAnimation {
+                                    duration: 400
+                                }
+                            }
+
+                            TextArea {
+                                width: parent.width
+                                height: parent.height
+                                id: minerOutput
+                                readOnly: true
+                                wrapMode: TextEdit.Wrap
+                                Connections {
+                                    target: applicationData
+                                    onMinerOutput: minerOutput.text += output
+                                }
+                                onTextChanged: minerOutputFlick.scrollToBottom()
+                            }
+                        }
                     }
                 }
             }

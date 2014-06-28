@@ -1,0 +1,114 @@
+#include "applicationdata.h"
+
+#include <QThread>
+#include <QDir>
+#include <QDebug>
+
+int ApplicationData::numThreads() const
+{
+    return QThread::idealThreadCount();
+}
+
+void cpuid(unsigned info, unsigned *eax, unsigned *ebx, unsigned *ecx, unsigned *edx)
+{
+    *eax = info;
+    __asm volatile
+            ("mov %%ebx, %%edi;"
+             "cpuid;"
+             "mov %%ebx, %%esi;"
+             "mov %%edi, %%ebx;"
+             :"+a" (*eax), "=S" (*ebx), "=c" (*ecx), "=d" (*edx)
+             : :"edi");
+}
+
+bool ApplicationData::cpuSupportsAES()
+{
+    quint32 eax, ebx, ecx, edx;
+    cpuid(1, &eax, &ebx, &ecx, &edx);
+    return ((edx & 0x2000000) != 0);
+}
+
+void ApplicationData::startCpuMiner(int numThreads, QString protocol, QString url, int port, QString address)
+{
+    if(minerProcess && minerProcess->state() == QProcess::Running) {
+        qDebug() << "Killing old miner thread...";
+        minerProcess->kill();
+        minerProcess->waitForFinished();
+    }
+
+    if(address.length() != 95) {
+        emit minerOutput("Invalid address: " + address + "\n");
+        return;
+    }
+
+    bool aes_ni = cpuSupportsAES();
+    QString minerd = QDir::currentPath() + "/bin/minerd";
+    if(aes_ni) {
+        minerd += "-aesni";
+    }
+#ifdef Q_OS_LINUX
+    minerd += ".linux";
+#elif defined(Q_OS_WIN32)
+    minerd += ".win.exe";
+#elif defined(Q_OS_MAC)
+    minerd += ".osx";
+#endif
+
+    QStringList arguments;
+    arguments << "-o" << (protocol == "tcp" ? "stratum+tcp://" : "http://") + url + ":" + QString::number(port);
+    arguments << "-a" << "cryptonight";
+    arguments << "-u" << address;
+    arguments << "-p" << "x";
+    arguments << "-t" << QString::number(numThreads);
+
+    qDebug() << "Launching" << minerd << "Threads:" << numThreads;
+    qDebug() << "Arguments: " << arguments;
+    minerProcess = new QProcess(this);
+    minerProcess->setReadChannelMode(QProcess::MergedChannels);
+    connect(minerProcess, SIGNAL(error(QProcess::ProcessError)),
+            this, SLOT(minerError(QProcess::ProcessError)));
+    connect(minerProcess, SIGNAL(readyRead()),
+            this, SLOT(minerReadyRead()));
+    connect(minerProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
+            this, SLOT(minerFinished(int,QProcess::ExitStatus)));
+    connect(minerProcess, SIGNAL(started()),
+            this, SIGNAL(minerStarted()));
+    minerProcess->start(minerd, arguments, QIODevice::ReadOnly);
+}
+
+void ApplicationData::stopCpuMiner()
+{
+    if(minerProcess && minerProcess->state() == QProcess::Running) {
+        qDebug() << "Killing miner thread...";
+        minerProcess->kill();
+        emit minerOutput("Mining stopped.\n");
+    }
+}
+
+void ApplicationData::minerReadyRead()
+{
+    emit minerOutput(minerProcess->readAll());
+}
+
+void ApplicationData::minerFinished(int code, QProcess::ExitStatus status)
+{
+    qDebug() << "Miner process finished. code:" << code << "status:" << status;
+    disconnect(minerProcess, SIGNAL(error(QProcess::ProcessError)),
+               this, SLOT(minerError(QProcess::ProcessError)));
+    disconnect(minerProcess, SIGNAL(readyRead()),
+               this, SLOT(minerReadyRead()));
+    disconnect(minerProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
+               this, SLOT(minerFinished(int,QProcess::ExitStatus)));
+    disconnect(minerProcess, SIGNAL(started()),
+               this, SIGNAL(minerStarted()));
+    minerProcess->deleteLater();
+    minerProcess = nullptr;
+
+    emit minerStopped();
+}
+
+void ApplicationData::minerError(QProcess::ProcessError)
+{
+    qDebug() << "Miner process error'd";
+}
+

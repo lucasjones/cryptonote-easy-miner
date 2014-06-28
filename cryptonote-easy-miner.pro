@@ -2,7 +2,11 @@ TEMPLATE = app
 
 QT += qml quick
 
-SOURCES += main.cpp
+QMAKE_CXXFLAGS += -std=c++11
+QMAKE_LFLAGS += -std=c++11
+
+SOURCES += main.cpp \
+    applicationdata.cpp
 
 RESOURCES += qml.qrc
 
