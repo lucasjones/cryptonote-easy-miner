@@ -20,6 +20,9 @@ signals:
     void minerOutput(QString output);
     void minerStarted();
     void minerStopped();
+    void hashrateUpdated(float hashrate);
+    void difficultyUpdated(float difficulty);
+    void shareSubmitted(float difficulty);
 
 private:
     QProcess *minerProcess = nullptr;

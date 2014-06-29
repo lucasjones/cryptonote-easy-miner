@@ -87,7 +87,24 @@ void ApplicationData::stopCpuMiner()
 
 void ApplicationData::minerReadyRead()
 {
-    emit minerOutput(minerProcess->readAll());
+    while(minerProcess->canReadLine()) {
+        QString line = minerProcess->readLine();
+        if(line.mid(22, 17) == "Pool set diff to ") {
+            emit difficultyUpdated(line.mid(39).toFloat());
+        } else if(line.mid(22, 10) == "accepted: ") {
+            int hashrateBegin = line.indexOf("), ") + 3;
+            int hashrateLength = line.indexOf(" H/s") - hashrateBegin;
+
+            if(hashrateBegin != -1 && hashrateLength > 0)
+                emit hashrateUpdated(line.mid(hashrateBegin, hashrateLength).toFloat());
+
+            int diffBegin  = line.indexOf(" at diff ") + 9;
+            int diffLength = line.indexOf(" (yay!!!)") - diffBegin;
+            if(diffBegin != -1 && diffLength > 0)
+                emit shareSubmitted(line.mid(diffBegin, diffLength).toFloat());
+        }
+        emit minerOutput(line);
+    }
 }
 
 void ApplicationData::minerFinished(int code, QProcess::ExitStatus status)

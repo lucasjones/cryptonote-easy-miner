@@ -7,11 +7,24 @@ Window {
     property string apiUrl: ''
     property string mineUrl: ''
     property bool minerRunning: false
+    property real lastHashrate: 30.05
+    property real currentDifficulty: 0
+    property int hashesSubmitted: 0
 
     Connections {
         target: applicationData
-        onMinerStarted: minerRunning = true
-        onMinerStopped: minerRunning = false
+        onMinerStarted: {
+            minerRunning = true;
+            currentDifficulty = 0;
+            hashesSubmitted = 0;
+        }
+        onMinerStopped: {
+            minerRunning = false;
+            lastHashrate = 0;
+        }
+        onHashrateUpdated: lastHashrate = hashrate
+        onDifficultyUpdated: currentDifficulty = difficulty
+        onShareSubmitted: hashesSubmitted += difficulty
     }
 
     function getThreadSelectionModel(num) {
@@ -80,14 +93,14 @@ Window {
     }
 
     function resetPoolData() {
-                addressInfoPanel.Layout.preferredHeight = 0;
-                poolPortListWidthAnimation.enabled = true;
-                poolPortList.width = 0;
-                poolPortListWidthAnimation.enabled = false;
-                poolName.text = '';
-                apiUrl = '';
-                mineUrl = '';
-                poolPortModel.clear();
+        addressInfoPanel.Layout.preferredHeight = 0;
+        poolPortListWidthAnimation.enabled = true;
+        poolPortList.width = 0;
+        poolPortListWidthAnimation.enabled = false;
+        poolName.text = '';
+        apiUrl = '';
+        mineUrl = '';
+        poolPortModel.clear();
     }
 
     function updateApiInfo() {
@@ -132,7 +145,7 @@ Window {
                 addressInfoPanel.Layout.preferredHeight = 0;
                 return console.error(data.error || 'Invalid response');
             }
-            console.log('Got address info! ' + res);
+            console.log('Got address info!');
             addressInfoPanel.address = address;
             addressInfoPanel.stats = data.stats;
             addressInfoPanel.Layout.preferredHeight = 100;
@@ -313,28 +326,52 @@ Window {
                         text: (poolPortModel.get(poolPortList.currentIndex) || {}).desc || ''
                     }
 
-                    Text {
-                        text: 'Difficulty: ' + ((poolPortModel.get(poolPortList.currentIndex) || {}).difficulty || '')
-                    }
-                    Text {
-                        text: 'Port: ' + ((poolPortModel.get(poolPortList.currentIndex) || {}).port || '')
-                    }
-                    ComboBox {
-                        id: numMinerThreads
-                        model: getThreadSelectionModel(applicationData.numThreads())
-                        Layout.preferredWidth: 85
-                    }
-                    Button {
-                        enabled: poolPortModel.count > 0
-                        text: minerRunning ? 'Stop Mining' : 'Start Mining'
-                        Layout.preferredWidth: 85
-                        onClicked: minerRunning ?
-                                       applicationData.stopCpuMiner() :
-                                       applicationData.startCpuMiner(numMinerThreads.currentIndex + 1,
-                                                                     poolPortModel.get(poolPortList.currentIndex).protocol,
-                                                                     mineUrl,
-                                                                     poolPortModel.get(poolPortList.currentIndex).port,
-                                                                     minerAddress.text)
+                    RowLayout {
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                Layout.fillWidth: true
+                                text: 'Difficulty: ' + ((poolPortModel.get(poolPortList.currentIndex) || {}).difficulty || '')
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: 'Port: ' + ((poolPortModel.get(poolPortList.currentIndex) || {}).port || '')
+                            }
+                            ComboBox {
+                                id: numMinerThreads
+                                model: getThreadSelectionModel(applicationData.numThreads())
+                                Layout.preferredWidth: 85
+                            }
+                            Button {
+                                enabled: poolPortModel.count > 0
+                                text: minerRunning ? 'Stop Mining' : 'Start Mining'
+                                Layout.preferredWidth: 85
+                                onClicked: minerRunning ?
+                                               applicationData.stopCpuMiner() :
+                                               applicationData.startCpuMiner(numMinerThreads.currentIndex + 1,
+                                                                             poolPortModel.get(poolPortList.currentIndex).protocol,
+                                                                             mineUrl,
+                                                                             poolPortModel.get(poolPortList.currentIndex).port,
+                                                                             minerAddress.text)
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.minimumWidth: 200
+                            Layout.maximumWidth: 200
+                            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+                            Text {
+                                text: 'AES-NI Supported: ' + (applicationData.cpuSupportsAES() ? '<b>YES</b>' : '<b>NO</b>')
+                            }
+                            Text {
+                                text: 'Hashrate: <b>' + lastHashrate.toFixed(2) + 'H/s</b>'
+                            }
+                            Text {
+                                text: 'Current difficulty: <b>' + currentDifficulty + '</b>'
+                            }
+                            Text {
+                                text: 'Hashes submitted: <b>' + hashesSubmitted + '</b>'
+                            }
+                        }
                     }
                     Rectangle {
                         Layout.fillHeight: true
