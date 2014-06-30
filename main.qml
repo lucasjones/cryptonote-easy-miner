@@ -23,12 +23,9 @@ Window {
             minerRunning = false;
             lastHashrate = 0;
         }
-        onBlockReceived: lastWorkUpdate = new Date()
+        onWorkReceived: lastWorkUpdate = new Date()
         onHashrateUpdated: lastHashrate = hashrate
-        onDifficultyUpdated: {
-            currentDifficulty = difficulty;
-            lastWorkUpdate = new Date();
-        }
+        onDifficultyUpdated: currentDifficulty = difficulty
         onShareSubmitted: hashesSubmitted += difficulty
     }
 

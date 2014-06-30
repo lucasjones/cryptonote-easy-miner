@@ -91,6 +91,7 @@ void ApplicationData::minerReadyRead()
         QString line = minerProcess->readLine();
         if(line.mid(22, 17) == "Pool set diff to ") {
             emit difficultyUpdated(line.mid(39).toFloat());
+            emit workReceived();
         } else if(line.mid(22, 10) == "accepted: ") {
             int hashrateBegin = line.indexOf("), ") + 3;
             int hashrateLength = line.indexOf(" H/s") - hashrateBegin;
@@ -103,7 +104,7 @@ void ApplicationData::minerReadyRead()
             if(diffBegin != -1 && diffLength > 0)
                 emit shareSubmitted(line.mid(diffBegin, diffLength).toFloat());
         } else if (line.mid(22, 26) == "Stratum detected new block") {
-            emit blockReceived();
+            emit workReceived();
         }
         emit minerOutput(line);
     }
