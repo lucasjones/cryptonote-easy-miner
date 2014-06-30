@@ -7,7 +7,7 @@ Window {
     property string apiUrl: ''
     property string mineUrl: ''
     property bool minerRunning: false
-    property real lastHashrate: 30.05
+    property real lastHashrate: 0
     property real currentDifficulty: 0
     property int hashesSubmitted: 0
 
