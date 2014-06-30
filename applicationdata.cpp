@@ -102,6 +102,8 @@ void ApplicationData::minerReadyRead()
             int diffLength = line.indexOf(" (yay!!!)") - diffBegin;
             if(diffBegin != -1 && diffLength > 0)
                 emit shareSubmitted(line.mid(diffBegin, diffLength).toFloat());
+        } else if (line.mid(22, 26) == "Stratum detected new block") {
+            emit blockReceived();
         }
         emit minerOutput(line);
     }

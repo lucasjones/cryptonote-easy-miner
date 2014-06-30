@@ -10,6 +10,7 @@ Window {
     property real lastHashrate: 0
     property real currentDifficulty: 0
     property int hashesSubmitted: 0
+    property date lastWorkUpdate: new Date(0)
 
     Connections {
         target: applicationData
@@ -22,8 +23,12 @@ Window {
             minerRunning = false;
             lastHashrate = 0;
         }
+        onBlockReceived: lastWorkUpdate = new Date()
         onHashrateUpdated: lastHashrate = hashrate
-        onDifficultyUpdated: currentDifficulty = difficulty
+        onDifficultyUpdated: {
+            currentDifficulty = difficulty;
+            lastWorkUpdate = new Date();
+        }
         onShareSubmitted: hashesSubmitted += difficulty
     }
 
@@ -356,20 +361,23 @@ Window {
                             }
                         }
                         ColumnLayout {
-                            Layout.minimumWidth: 200
-                            Layout.maximumWidth: 200
+                            Layout.minimumWidth: 220
+                            Layout.maximumWidth: 220
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                             Text {
                                 text: 'AES-NI Supported: ' + (applicationData.cpuSupportsAES() ? '<b>YES</b>' : '<b>NO</b>')
                             }
                             Text {
-                                text: 'Hashrate: <b>' + lastHashrate.toFixed(2) + 'H/s</b>'
+                                text: 'Hashrate: <b>' + lastHashrate.toFixed(2) + ' H/s</b>'
                             }
                             Text {
                                 text: 'Current difficulty: <b>' + currentDifficulty + '</b>'
                             }
                             Text {
                                 text: 'Hashes submitted: <b>' + hashesSubmitted + '</b>'
+                            }
+                            Text {
+                                text: 'Last work update: <b>' + lastWorkUpdate.toLocaleTimeString() + '</b>'
                             }
                         }
                     }

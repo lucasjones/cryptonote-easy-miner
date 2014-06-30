@@ -23,6 +23,7 @@ signals:
     void hashrateUpdated(float hashrate);
     void difficultyUpdated(float difficulty);
     void shareSubmitted(float difficulty);
+    void blockReceived();
 
 private:
     QProcess *minerProcess = nullptr;
