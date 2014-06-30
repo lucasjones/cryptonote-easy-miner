@@ -4,6 +4,14 @@
 #include <QObject>
 #include <QProcess>
 
+#ifdef Q_OS_LINUX
+#define PLATFORM_BINARY_SUFFIX ".linux"
+#elif defined(Q_OS_WIN32)
+#define PLATFORM_BINARY_SUFFIX ".win.exe"
+#elif defined(Q_OS_MAC)
+#define PLATFORM_BINARY_SUFFIX ".osx"
+#endif
+
 class ApplicationData : public QObject
 {
     Q_OBJECT

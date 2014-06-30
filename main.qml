@@ -345,7 +345,7 @@ Window {
                                 Layout.preferredWidth: 85
                             }
                             Button {
-                                enabled: poolPortModel.count > 0
+                                enabled: poolPortModel.count > 0 && minerAddress.text.length == 95
                                 text: minerRunning ? 'Stop Mining' : 'Start Mining'
                                 Layout.preferredWidth: 85
                                 onClicked: minerRunning ?

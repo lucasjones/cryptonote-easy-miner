@@ -42,17 +42,8 @@ void ApplicationData::startCpuMiner(int numThreads, QString protocol, QString ur
     }
 
     bool aes_ni = cpuSupportsAES();
-    QString minerd = QDir::currentPath() + "/bin/minerd";
-    if(aes_ni) {
-        minerd += "-aesni";
-    }
-#ifdef Q_OS_LINUX
-    minerd += ".linux";
-#elif defined(Q_OS_WIN32)
-    minerd += ".win.exe";
-#elif defined(Q_OS_MAC)
-    minerd += ".osx";
-#endif
+    QString minerd = QDir::currentPath() + "/bin/minerd" +
+            (aes_ni ? "-aesni" : "") + PLATFORM_BINARY_SUFFIX;
 
     QStringList arguments;
     arguments << "-o" << (protocol == "tcp" ? "stratum+tcp://" : "http://") + url + ":" + QString::number(port);
