@@ -23,6 +23,7 @@ public:
     Q_INVOKABLE void startCpuMiner(int numThreads, QString protocol, QString url, int port, QString address);
     Q_INVOKABLE void stopCpuMiner();
     Q_INVOKABLE bool cpuSupportsAES();
+    Q_INVOKABLE double parseDouble(QString str);
 
 signals:
     void minerOutput(QString output);

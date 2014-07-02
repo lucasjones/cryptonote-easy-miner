@@ -46,7 +46,7 @@ void ApplicationData::startCpuMiner(int numThreads, QString protocol, QString ur
             (aes_ni ? "-aesni" : "") + PLATFORM_BINARY_SUFFIX;
 
     QStringList arguments;
-    arguments << "-o" << (protocol == "tcp" ? "stratum+tcp://" : "http://") + url + ":" + QString::number(port);
+    arguments << "-o" << (protocol == "http" ? "http://" : "stratum+tcp://") + url + ":" + QString::number(port);
     arguments << "-a" << "cryptonight";
     arguments << "-u" << address;
     arguments << "-p" << "x";
@@ -123,3 +123,7 @@ void ApplicationData::minerError(QProcess::ProcessError)
     qDebug() << "Miner process error'd";
 }
 
+double ApplicationData::parseDouble(QString str)
+{
+    return str.toDouble();
+}

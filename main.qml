@@ -10,6 +10,7 @@ Window {
     property real lastHashrate: 0
     property real currentDifficulty: 0
     property int hashesSubmitted: 0
+    property double coinUnits: 1000000000000
     property date lastWorkUpdate: new Date(0)
 
     Connections {
@@ -74,21 +75,45 @@ Window {
 
         httpGet(url, function(err, body) {
             if(err) return callback(err);
-            var index = body.indexOf('var api = ');
+            var index = body.indexOf('var poolHost = ') + 15;
+            var end;
             if(index !== -1) {
                 while(body[index] !== '\'' && body[index] !== '"') {
                     ++index;
                 }
-                var end = body.indexOf(body[index], index + 1);
+                end = body.indexOf(body[index], index + 1);
+                if(end === -1) {
+                    return callback(qsTr('Unable to parse miner url'));
+                }
+                mineUrl = body.substr(index + 1, end - index - 1);
+                while(mineUrl[mineUrl.length - 1] === '/') {
+                    mineUrl.substr(0, mineUrl.length - 1);
+                }
+            }
+            index = body.indexOf('var coinUnits = ') + 16;
+            if(index !== -1) {
+                end = body.indexOf(';', index + 1);
+                if(end === -1) {
+                    return callback(qsTr('Unable to parse miner url'));
+                }
+                coinUnits = applicationData.parseDouble(body.substr(index, end - index));
+                console.log("Got coinUnits: ", body.substr(index, end - index), coinUnits);
+            }
+            index = body.indexOf('var api = ') + 10;
+            if(index !== -1) {
+                while(body[index] !== '\'' && body[index] !== '"') {
+                    ++index;
+                }
+                end = body.indexOf(body[index], index + 1);
                 if(end === -1) {
                     return callback(qsTr('Unable to parse api url'));
                 }
-                var apiUrl = body.substr(index + 1, end - index - 1);
+                apiUrl = body.substr(index + 1, end - index - 1);
                 while(apiUrl[apiUrl.length - 1] === '/') {
                     apiUrl.substr(0, apiUrl.length - 1);
                 }
 
-                return callback(null, apiUrl);
+                return callback(null);
             }
             callback(qsTr('Unable to parse api url'));
         });
@@ -122,7 +147,6 @@ Window {
             poolPortList.width = 240;
             poolPortListWidthAnimation.enabled = false;
             poolName.text = cleanUrl(poolUrl.text);
-            mineUrl = data.config.poolHost;
             console.log('Got stats!');
         });
     }
@@ -164,14 +188,18 @@ Window {
 
     function getApiInfo() {
         var pUrl = poolUrl.text;
+        while(pUrl[pUrl.length - 1] === '/') {
+            pUrl = pUrl.substring(0, pUrl.length - 1);
+        }
+        pUrl += '/config.js';
+
         console.log('Retreiving api url from ' + pUrl + ' ...');
-        getApiUrl(pUrl, function(err, url) {
+        getApiUrl(pUrl, function(err) {
             if(err) {
                 resetPoolData();
                 return console.error(err);
             }
-            console.log('Got api url: ' + url);
-            apiUrl = url;
+            console.log('Got api url: ' + apiUrl);
             updateApiInfo();
             updateAddressInfo();
         });
@@ -255,13 +283,13 @@ Window {
                     text: 'Hashrate: <b>' + (addressInfoPanel.stats.hashrate || '0 H') + '/s</b> (est.)'
                 }
                 Text {
-                    text: 'Paid: <b>' + addressInfoPanel.stats.paid + '</b>'
+                    text: 'Paid: <b>' + (parseInt(addressInfoPanel.stats.paid || '0') / coinUnits)+ ' ' + (addressInfoPanel.stats.symbol || '') + '</b>'
                 }
                 Text {
-                    text: 'Pending balance: <b>' + addressInfoPanel.stats.balance + '</b>'
+                    text: 'Pending balance: <b>' + (parseInt(addressInfoPanel.stats.balance || '0') / coinUnits) + ' ' + (addressInfoPanel.stats.symbol || '') + '</b>'
                 }
                 Text {
-                    text: 'Hashes: <b>' + addressInfoPanel.stats.hashes + '</b>'
+                    text: 'Hashes submitted: <b>' + (addressInfoPanel.stats.hashes || '0') + '</b>'
                 }
             }
         }
@@ -298,14 +326,15 @@ Window {
 
                     RowLayout {
                         anchors.top: parent.top
+                        anchors.left: parent.left
                         anchors.margins: 4
                         Rectangle {
-                            color: model.protocol === 'tcp' ? '#5cb85c' : '#f0ad4e'
+                            color: model.protocol === 'http' ? '#f0ad4e' : '#5cb85c'
                             radius: 4
                             width: childrenRect.width + 8
                             height: childrenRect.height + 8
                             Text {
-                                text: model.protocol
+                                text: model.protocol || 'tcp'
                                 anchors.left: parent.left
                                 anchors.top: parent.top
                                 anchors.margins: 4
@@ -351,7 +380,7 @@ Window {
                                 onClicked: minerRunning ?
                                                applicationData.stopCpuMiner() :
                                                applicationData.startCpuMiner(numMinerThreads.currentIndex + 1,
-                                                                             poolPortModel.get(poolPortList.currentIndex).protocol,
+                                                                             poolPortModel.get(poolPortList.currentIndex).protocol || 'tcp',
                                                                              mineUrl,
                                                                              poolPortModel.get(poolPortList.currentIndex).port,
                                                                              minerAddress.text)
@@ -368,7 +397,7 @@ Window {
                                 text: 'Hashrate: <b>' + lastHashrate.toFixed(2) + ' H/s</b>'
                             }
                             Text {
-                                text: 'Current difficulty: <b>' + currentDifficulty + '</b>'
+                                text: 'Current difficulty: <b>' + currentDifficulty.toFixed(0) + '</b>'
                             }
                             Text {
                                 text: 'Hashes submitted: <b>' + hashesSubmitted + '</b>'
