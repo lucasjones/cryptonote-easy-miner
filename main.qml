@@ -9,29 +9,25 @@ Window {
     width: 700
     height: 500
     title: "CryptoNote Easy Miner"
-    color: "white"
+    color: "honeydew"
 
     TabView {
         anchors.fill: parent
         id: tabView
         style: TabViewStyle {
             tab: Rectangle {
-                implicitWidth: tabView.width / tabView.count
+                implicitWidth: text.width + 80
                 implicitHeight: 30
-                color: "lightgrey"
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.bottomMargin: 1
-                    color: styleData.selected ? "paleturquoise" : "honeydew"
-                    Text {
-                        id: text
-                        anchors.centerIn: parent
-                        font.pixelSize: 20
-                        text: styleData.title
-                        color: "black"
-                    }
+                color: styleData.selected ? "paleturquoise" : "honeydew"
+                Text {
+                    id: text
+                    anchors.centerIn: parent
+                    font.pixelSize: 20
+                    text: styleData.title
+                    color: "black"
                 }
             }
+            tabsMovable: true
             frame: Rectangle { color: "steelblue" }
         }
 
