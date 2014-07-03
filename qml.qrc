@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
+        <file>mining.qml</file>
+        <file>wallet.qml</file>
     </qresource>
 </RCC>
