@@ -17,7 +17,8 @@ QML_IMPORT_PATH =
 include(deployment.pri)
 
 OTHER_FILES += \
-    README.md
+    README.md \
+    LICENSE
 
 HEADERS += \
     applicationdata.h

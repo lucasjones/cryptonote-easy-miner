@@ -8,7 +8,7 @@ Window {
     visible: true
     width: 700
     height: 500
-    title: "CryptoNote Easy Miner"
+    title: "Cryptonote Easy Miner"
     color: "honeydew"
 
     TabView {
