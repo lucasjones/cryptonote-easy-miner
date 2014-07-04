@@ -96,7 +96,6 @@ Rectangle {
                     return callback(qsTr("Unable to parse miner url"));
                 }
                 coinUnits = applicationData.parseDouble(body.substr(index, end - index));
-                console.log("Got coinUnits: ", body.substr(index, end - index), coinUnits);
             }
             index = body.indexOf("var api = ") + 10;
             if(index !== -1) {
@@ -151,6 +150,7 @@ Rectangle {
     }
 
     function updateAddressInfo() {
+        if(!minerAddress.acceptableInput) return;
         var address = minerAddress.text;
         if(address.length < 95  || apiUrl === "" || poolUrl.text === "") {
             addressInfoPanel.Layout.preferredHeight = 0;
@@ -173,19 +173,20 @@ Rectangle {
             console.log("Got address info!");
             addressInfoPanel.address = address;
             addressInfoPanel.stats = data.stats;
-            addressInfoPanel.Layout.preferredHeight = 100;
+            addressInfoPanel.Layout.preferredHeight = addressInfoPanel.expandedHeight;
         });
     }
 
     Timer {
         id: addressInfoTimer
-        interval: 3000
+        interval: 10000
         repeat: true
         running: true
         onTriggered: updateAddressInfo()
     }
 
     function getApiInfo() {
+        if(!poolUrl.acceptableInput) return;
         var pUrl = poolUrl.text;
         while(pUrl[pUrl.length - 1] === "/") {
             pUrl = pUrl.substring(0, pUrl.length - 1);
@@ -202,14 +203,6 @@ Rectangle {
             updateApiInfo();
             updateAddressInfo();
         });
-    }
-
-    Timer {
-        id: apiInfoTimeout
-        interval: 500
-        repeat: false
-        running: false
-        onTriggered: getApiInfo()
     }
 
     ColumnLayout {
@@ -233,6 +226,9 @@ Rectangle {
                 Layout.fillWidth: true
                 placeholderText: "48Y4SoUJM5L3YXBEfNQ8bFNsvTNsqcH5Rgq8RF7BwpgvTBj2xr7CmWVanaw7L4U9MnZ4AG7U6Pn1pBhfQhFyFZ1rL1efL8z"
                 onTextChanged: updateAddressInfo()
+                validator: RegExpValidator {
+                    regExp: /[A-Za-z1-9]{95,}/
+                }
             }
             Text {
                 text: qsTr("Pool URL:")
@@ -241,7 +237,10 @@ Rectangle {
                 id: poolUrl
                 Layout.fillWidth: true
                 placeholderText: ""
-                onTextChanged: apiInfoTimeout.restart()
+                onTextChanged: getApiInfo()
+                validator: RegExpValidator {
+                    regExp: /.+\..+/
+                }
             }
         }
 
@@ -264,10 +263,9 @@ Rectangle {
             id: addressInfoPanel
             property string address: ""
             property var stats: {stats: ({})}
+            property int expandedHeight: 120
             ColumnLayout {
-                Layout.fillHeight: true
                 Layout.fillWidth: true
-
                 Text {
                     text: "<b>" + addressInfoPanel.address + "</b>"
                     font.pixelSize: 10
@@ -283,6 +281,9 @@ Rectangle {
                 }
                 Text {
                     text: "Hashes submitted: <b>" + (addressInfoPanel.stats.hashes || "0") + "</b>"
+                }
+                Text {
+                    text: "Last share: <b>" + new Date(parseInt(addressInfoPanel.stats.lastShare) * 1000).toLocaleString() + "</b>"
                 }
             }
         }
