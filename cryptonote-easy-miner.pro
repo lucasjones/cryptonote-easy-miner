@@ -5,10 +5,11 @@ QT += qml quick
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_LFLAGS += -std=c++11
 
-SOURCES += main.cpp \
-    applicationdata.cpp
+SOURCES += src/main.cpp \
+    src/applicationdata.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += \
+    qml.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -21,4 +22,4 @@ OTHER_FILES += \
     LICENSE
 
 HEADERS += \
-    applicationdata.h
+    src/applicationdata.h

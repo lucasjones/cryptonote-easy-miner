@@ -91,6 +91,10 @@ Rectangle {
             }
             index = body.indexOf("var coinUnits") + 13;
             if(index !== -1) {
+                while(isNaN(parseInt(body[index], 10))) {
+                    ++index;
+                }
+
                 end = body.indexOf(";", index + 1);
                 if(end === -1) {
                     return callback(qsTr("Unable to parse miner url"));

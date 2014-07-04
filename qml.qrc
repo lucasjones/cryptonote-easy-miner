@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>main.qml</file>
-        <file>mining.qml</file>
+        <file>qml/main.qml</file>
+        <file>qml/mining.qml</file>
     </qresource>
 </RCC>
