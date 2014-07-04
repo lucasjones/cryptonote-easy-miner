@@ -6,8 +6,8 @@ import QtQuick.Controls.Styles 1.1
 
 Window {
     visible: true
-    width: 700
-    height: 500
+    width: 750
+    height: 550
     title: "Cryptonote Easy Miner"
     color: "honeydew"
 

@@ -123,9 +123,6 @@ Rectangle {
 
     function resetPoolData() {
         addressInfoPanel.Layout.preferredHeight = 0;
-        poolPortListWidthAnimation.enabled = true;
-        poolPortList.width = 0;
-        poolPortListWidthAnimation.enabled = false;
         poolName.text = "";
         apiUrl = "";
         mineUrl = "";
@@ -145,18 +142,18 @@ Rectangle {
             for(var i = 0; i < data.config.ports.length; ++i) {
                 poolPortModel.append(data.config.ports[i]);
             }
-            poolPortListWidthAnimation.enabled = true;
-            poolPortList.width = 240;
-            poolPortListWidthAnimation.enabled = false;
             poolName.text = cleanUrl(poolUrl.text);
             console.log("Got stats!");
         });
     }
 
     function updateAddressInfo() {
-        if(!minerAddress.acceptableInput) return;
+        if(!minerAddress.acceptableInput) {
+            addressInfoPanel.Layout.preferredHeight = 0;
+            return;
+        }
         var address = minerAddress.text;
-        if(address.length < 95  || apiUrl === "" || poolUrl.text === "") {
+        if(apiUrl === "" || poolUrl.text === "") {
             addressInfoPanel.Layout.preferredHeight = 0;
             return;
         }
@@ -190,7 +187,7 @@ Rectangle {
     }
 
     function getApiInfo() {
-        if(!poolUrl.acceptableInput) return;
+        if(!poolUrl.acceptableInput) return resetPoolData();
         var pUrl = poolUrl.text;
         while(pUrl[pUrl.length - 1] === "/") {
             pUrl = pUrl.substring(0, pUrl.length - 1);
@@ -299,14 +296,9 @@ Rectangle {
             ListView {
                 id: poolPortList
                 Layout.fillHeight: true
-                width: 0
+                width: 240
                 model: poolPortModel
                 focus: true
-
-                Behavior on width {
-                    id: poolPortListWidthAnimation
-                    NumberAnimation { duration: 500 }
-                }
 
                 highlight: Rectangle {
                     Layout.fillWidth: true
