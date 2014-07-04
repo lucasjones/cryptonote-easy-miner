@@ -74,10 +74,10 @@ Rectangle {
 
         httpGet(url, function(err, body) {
             if(err) return callback(err);
-            var index = body.indexOf("var poolHost = ") + 15;
+            var index = body.indexOf("var poolHost") + 12;
             var end;
             if(index !== -1) {
-                while(body[index] !== "\"" && body[index] !== "\"") {
+                while(body[index] !== "\"" && body[index] !== "'") {
                     ++index;
                 }
                 end = body.indexOf(body[index], index + 1);
@@ -89,7 +89,7 @@ Rectangle {
                     mineUrl.substr(0, mineUrl.length - 1);
                 }
             }
-            index = body.indexOf("var coinUnits = ") + 16;
+            index = body.indexOf("var coinUnits") + 13;
             if(index !== -1) {
                 end = body.indexOf(";", index + 1);
                 if(end === -1) {
@@ -97,9 +97,9 @@ Rectangle {
                 }
                 coinUnits = applicationData.parseDouble(body.substr(index, end - index));
             }
-            index = body.indexOf("var api = ") + 10;
+            index = body.indexOf("var api") + 7;
             if(index !== -1) {
-                while(body[index] !== "\"" && body[index] !== "\"") {
+                while(body[index] !== "\"" && body[index] !== "'") {
                     ++index;
                 }
                 end = body.indexOf(body[index], index + 1);
