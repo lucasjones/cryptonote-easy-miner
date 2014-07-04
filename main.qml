@@ -15,25 +15,12 @@ Window {
         anchors.fill: parent
         id: tabView
         style: TabViewStyle {
-            tab: Rectangle {
-                implicitWidth: text.width + 80
-                implicitHeight: 30
-                color: styleData.selected ? "paleturquoise" : "honeydew"
-                Text {
-                    id: text
-                    anchors.centerIn: parent
-                    font.pixelSize: 20
-                    text: styleData.title
-                    color: "black"
-                }
-            }
+            tab: Rectangle { }
             tabsMovable: true
-            frame: Rectangle { color: "steelblue" }
         }
 
         Component.onCompleted: {
             addTab("Mining", Qt.createComponent("mining.qml"));
-            addTab("Wallet", Qt.createComponent("wallet.qml"));
         }
     }
 }
