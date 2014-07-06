@@ -6,6 +6,7 @@ import QtQuick.Controls 1.1
 Rectangle {
     property string apiUrl: ""
     property string mineUrl: ""
+    property string currentPoolUrl: ""
     property bool minerRunning: false
     property real lastHashrate: 0
     property real currentDifficulty: 0
@@ -68,12 +69,16 @@ Rectangle {
     }
 
     function getApiUrl(url, callback) {
+        var oUrl = url;
         if(url.indexOf("//") === -1) {
             url = "http://" + url;
         }
+        url += '/config.js';
+        console.log("Retreiving api url from " + url + " ...");
 
         httpGet(url, function(err, body) {
             if(err) return callback(err);
+            currentPoolUrl = oUrl;
             var index = body.indexOf("var poolHost") + 12;
             var end;
             if(index !== -1) {
@@ -123,9 +128,9 @@ Rectangle {
 
     function resetPoolData() {
         addressInfoPanel.Layout.preferredHeight = 0;
-        poolName.text = "";
         apiUrl = "";
         mineUrl = "";
+        currentPoolUrl = "";
         poolPortModel.clear();
     }
 
@@ -142,7 +147,6 @@ Rectangle {
             for(var i = 0; i < data.config.ports.length; ++i) {
                 poolPortModel.append(data.config.ports[i]);
             }
-            poolName.text = cleanUrl(poolUrl.text);
             console.log("Got stats!");
         });
     }
@@ -192,9 +196,7 @@ Rectangle {
         while(pUrl[pUrl.length - 1] === "/") {
             pUrl = pUrl.substring(0, pUrl.length - 1);
         }
-        pUrl += "/config.js";
 
-        console.log("Retreiving api url from " + pUrl + " ...");
         getApiUrl(pUrl, function(err) {
             if(err) {
                 resetPoolData();
@@ -246,11 +248,11 @@ Rectangle {
         }
 
         Text {
-            id: poolName
             Layout.fillWidth: true
             height: 30
             font.bold: true
             font.pixelSize: 30
+            text: currentPoolUrl ? cleanUrl(currentPoolUrl) : "No connection to pool"
         }
 
         Rectangle {
